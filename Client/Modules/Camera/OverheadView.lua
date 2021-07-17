@@ -22,6 +22,11 @@ local Maid, maid
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
+local CameraConstraints = {
+    MaxPosition = Vector2.new(math.huge, math.huge),
+    MinPosition = Vector2.new(-math.huge, -math.huge)
+}
+
 -- Called when the module is ready for set up
 function OverheadView:Start()
     CameraView.Start(self)
@@ -42,6 +47,16 @@ function OverheadView:Init()
     OverheadView = setmetatable(OverheadView, {
         __index = CameraView
     })
+end
+
+-- Optionally set a max & min position for the camera
+function OverheadView:SetConstraints(cameraMax : Vector2?, cameraMin : Vector2?)
+    if cameraMax ~= nil then
+        CameraConstraints.MaxPosition = cameraMax
+    end
+    if cameraMin ~= nil then
+        CameraConstraints.MinPosition = cameraMin
+    end
 end
 
 -- Applies the changes needed for the player to be in Overhead view
@@ -84,6 +99,12 @@ function OverheadView:Update()
 
     camera.CFrame = CFrame.new(Vector3.new(cameraPosition.X, Zoom:GetNext(), cameraPosition.Y), Vector3.new(cameraPosition.X,0,cameraPosition.Y))
     cameraPosition += Vector2.new(-moveVector.Z * speed, moveVector.X * speed)
+
+    -- Apply the constraints to the camera's position, so it stays within the box
+    cameraPosition = Vector2.new(
+        math.min(math.max(cameraPosition.X, CameraConstraints.MinPosition.X), CameraConstraints.MaxPosition.X),
+        math.min(math.max(cameraPosition.Y, CameraConstraints.MinPosition.Y), CameraConstraints.MaxPosition.Y)
+    )
 end
 
 -- Cleans up all events & resets the active maid.
